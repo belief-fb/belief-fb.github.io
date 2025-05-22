@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="Belief-FB adapts zero-shot RL to different dynamics.">
+  <meta name="keywords" content="zero-shot">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Belief Forward-Backward</title>
+
+  <!-- Yandex.Metrika counter -->
+  <script type="text/javascript">
+    (function (m, e, t, r, i, k, a) {
+      m[i] = m[i] || function () { (m[i].a = m[i].a || []).push(arguments) };
+      m[i].l = 1 * new Date();
+      for (var j = 0; j < document.scripts.length; j++) { if (document.scripts[j].src === r) { return; } }
+      k = e.createElement(t), a = e.getElementsByTagName(t)[0], k.async = 1, k.src = r, a.parentNode.insertBefore(k, a)
+    })
+      (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+
+    ym(102082965, "init", {
+      clickmap: true,
+      trackLinks: true,
+      accurateTrackBounce: true
+    });
+  </script>
+  <noscript>
+    <div><img src="https://mc.yandex.ru/watch/102082965" style="position:absolute; left:-9999px;" alt="" /></div>
+  </noscript>
+  <!-- /Yandex.Metrika counter -->
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" href="./static/images/favicon.svg">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+  <script type="text/javascript" id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+</head>
+
+<body>
+
+  <!-- <nav class="navbar" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+    <div class="navbar-menu">
+      <div class="navbar-start" style="flex-grow: 1; justify-content: center;">
+        <a class="navbar-item" href="https://keunhong.com">
+          <span class="icon">
+            <i class="fas fa-home"></i>
+          </span>
+        </a>
+
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">
+            More Research
+          </a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="https://hypernerf.github.io">
+              HyperNeRF
+            </a>
+            <a class="navbar-item" href="https://nerfies.github.io">
+              Nerfies
+            </a>
+            <a class="navbar-item" href="https://latentfusion.github.io">
+              LatentFusion
+            </a>
+            <a class="navbar-item" href="https://photoshape.github.io">
+              PhotoShape
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </nav> -->
+
+
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-1 publication-title">Zero-Shot Adaptation of Behavioral Foundation Models to Unseen
+              Dynamics</h1>
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">
+                <a href="about:blank" target="_blank">Maksim Bobrin<sup>1, 2</sup></a>,</span>
+              <span class="author-block">
+                <a href="https://zis.mn" target="_blank">Ilya Zisman<sup>1, 2</sup></a>,</span>
+              <span class="author-block">
+                <a href="https://howuhh.github.io/ target=" _blank"">Alexander Nikulin<sup>1, 3, 4</sup></a>,
+              </span>
+              <span class="author-block">
+                <a href="about:blank" target="_blank">Vladislav Kurenkov<sup>1, 5</sup></a>,
+              </span>
+              <span class="author-block">
+                <a href="about:blank" target="_blank">Dmitry Dylov<sup>1, 2</sup></a>,
+              </span>
+
+            </div>
+
+            <div class="is-size-5 publication-authors">
+              <span class="author-block"><sup>1</sup>AIRI,</span>
+              <span class="author-block"><sup>2</sup>Skoltech,</span>
+              <span class="author-block"><sup>3</sup>MIPT,</span>
+              <span class="author-block"><sup>4</sup>MSU,</span>
+              <span class="author-block"><sup>5</sup>Innopolis University</span>
+            </div>
+
+            <div class="column has-text-centered">
+              <div class="publication-links">
+                <!-- PDF Link. -->
+                <span class="link-block">
+                  <a href="https://arxiv.org/pdf/2011.12948" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fas fa-file-pdf"></i>
+                    </span>
+                    <span>Paper</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="https://arxiv.org/abs/2505.13150" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="ai ai-arxiv"></i>
+                    </span>
+                    <span>arXiv</span>
+                  </a>
+                </span>
+                <!-- Code Link. -->
+                <span class="link-block">
+                  <a href="https://github.com/skylooop/BeliefConditionedFB"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fab fa-github"></i>
+                    </span>
+                    <span>Code</span>
+                  </a>
+                </span>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container is-max-desktop">
+      <!-- Abstract. -->
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3">TLDR</h2>
+          <div class="content has-text-justified">
+            <p>
+              Zero-shot reinforcement learning aims to deploy agents in new environments without test-time fine-tuning.
+              Behavioral
+              Foundation Models (BFMs) offer a promising framework, but existing methods fail under dynamics shifts, due
+              to
+              interference—they average over different environment dynamics, leading to entangled policy
+              representations.
+            </p>
+            <p>
+              We identify this limitation in Forward-Backward (FB) representations, analyze it theoretically and and
+              propose two solutions:
+              <b>Belief-FB (BFB)</b>, which infers the latent context (dynamics) via belief estimation and conditions
+              the model
+              accordingly,
+              and
+              <b>Rotation-FB (RFB)</b>, which further disentangles policy space by adjusting the prior over \(z_{FB}\).
+            </p>
+            <p>
+              Our methods achieve strong zero-shot performance across both seen and unseen dynamics, significantly
+              outperforming prior
+              approaches.
+            </p>
+          </div>
+        </div>
+      </div>
+      <!--/ Abstract. -->
+
+      <!-- Paper video. -->
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <!-- <h2 class="title is-3">Main Result</h2> -->
+          <div class="publication-video">
+            <img src="./static/images/bfm_main.png" class="interpolation-image" alt="Main Figure" />
+          </div>
+        </div>
+      </div>
+      <!--/ Paper video. -->
+    </div>
+  </section>
+
+
+  <section class="section">
+    <div class="container is-max-desktop">
+
+      <div class="columns is-centered">
+
+        <div class="column">
+          <div class="content">
+            <h2 class="title is-3">Investigating the problem</h2>
+            <p>
+              We found that zero-shot failures in BFMs stem from <i>interference</i> – training on mixed dynamics
+              entangles
+              <br>policies, as the
+              model can't distinguish between <br>environment variations.
+            </p>
+            <video id="dollyzoom" autoplay controls muted loop playsinline height="100%">
+              <source src="./static/videos/vanilla_2.mp4" type="video/mp4">
+            </video>
+          </div>
+        </div>
+
+        <div class="column">
+          <h2 class="title is-3">Belief Estimation</h2>
+          <div class="columns is-centered">
+            <div class="column content">
+              <p>
+                We mitigate interference by inferring latent dynamics from trajectories. Conditioning on this belief
+                lets BFMs
+                separate policies and generalize across environments. <br><br>
+              </p>
+              <video id="matting-video" controls playsinline height="100%">
+                <source src="./static/videos/belief_2.mp4" type="video/mp4">
+              </video>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Animation. -->
+      <div class="columns is-centered">
+        <div class="column is-full-width">
+
+          <!-- Interpolating. -->
+          <h3 class="title is-4">Learned Q-functions</h3>
+          <div class="content has-text-justified">
+            <p>
+              Here comes the description of q-function figure...
+            </p>
+          </div>
+          <!-- <div class="columns is-vcentered interpolation-panel">
+            <div class="column is-3 has-text-centered">
+              <img src="./static/images/interpolate_start.jpg" class="interpolation-image"
+                alt="Interpolate start reference image." />
+              <p>Start Frame</p>
+            </div>
+            <div class="column interpolation-video-column">
+              <div id="interpolation-image-wrapper">
+                Loading...
+              </div>
+              <input class="slider is-fullwidth is-large is-info" id="interpolation-slider" step="1" min="0" max="100"
+                value="0" type="range">
+            </div>
+            <div class="column is-3 has-text-centered">
+              <img src="./static/images/interpolate_end.jpg" class="interpolation-image"
+                alt="Interpolation end reference image." />
+              <p class="is-bold">End Frame</p>
+            </div>
+          </div>
+          <br /> -->
+          <!--/ Interpolating. -->
+
+          <h3 class="title is-4">Environments</h3>
+          <div class="content has-text-justified">
+            <p>
+              We evaluate our methods in both discrete and continuous settings with procedurally generated layouts. To
+              test
+              generalization, a subset of environments is held out entirely during training and used only at test time.
+              Here we present some of the layouts.
+            </p>
+          </div>
+          <div class="content has-text-centered">
+            <img style='width: 70%; object-fit: contain' src="./static/images/envs.png" class="interpolation-image"
+              alt="Different Layouts" />
+          </div>
+          <!--/ Re-rendering. -->
+
+        </div>
+      </div>
+      <!--/ Animation. -->
+
+    </div>
+  </section>
+
+
+  <section class="section" id="BibTeX">
+    <div class="container is-max-desktop content">
+      <h2 class="title">Citation:</h2>
+      <pre><code>@misc{bobrin2025zeroshotadaptationbehavioralfoundation,
+      title={Zero-Shot Adaptation of Behavioral Foundation Models to Unseen Dynamics},
+      author={Maksim Bobrin and Ilya Zisman and Alexander Nikulin and Vladislav Kurenkov and Dmitry Dylov},
+      year={2025},
+      eprint={2505.13150},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2505.13150},
+}</code></pre>
+    </div>
+  </section>
+
+</body>
+
+</html>
